@@ -1,0 +1,33 @@
+---
+title: Animal example
+---
+classDiagram
+    class Sensor {
+        +String id
+        +String name
+        +String type
+        +String location
+        +String status
+        +Metadata metadata
+    }
+    class Metadata {
+        +String manufacturer
+        +String model
+        +String serialNumber
+        +String firmwareVersion
+        +double[] thresholds
+    }
+    Sensor <|-- Metadata
+    class Measurement {
+        +String id
+        +String sensorId
+        +String timestamp
+        +double[] value
+    }
+    class SensorType {
+        +String id
+        +String name
+        +String description
+    }
+    Sensor "1" -- "0..*" SensorType : has
+    Sensor "1" -- "0..*" Measurement : measures
