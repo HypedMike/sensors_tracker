@@ -11,18 +11,22 @@ import (
 )
 
 type SensorService struct {
-	router           *gin.RouterGroup
-	path             string
-	mongoClient      *mongo.Client
-	sensorRepository *repository.SensorRepository
+	router                *gin.RouterGroup
+	path                  string
+	mongoClient           *mongo.Client
+	sensorRepository      *repository.SensorRepository
+	measurementRepository *repository.MeasurementRepository
+	service               *Service
 }
 
-func NewSensorService(group *gin.RouterGroup, mongoClient *mongo.Client) *SensorService {
+func NewSensorService(group *gin.RouterGroup, mongoClient *mongo.Client, service *Service) *SensorService {
 	s := SensorService{
-		router:           group,
-		mongoClient:      mongoClient,
-		path:             "/devices",
-		sensorRepository: repository.NewSensorRepository(mongoClient),
+		router:                group,
+		mongoClient:           mongoClient,
+		path:                  "/devices",
+		sensorRepository:      repository.NewSensorRepository(mongoClient),
+		measurementRepository: repository.NewMeasurementRepository(mongoClient),
+		service:               service,
 	}
 	// Initialize routes or other service-specific setup here
 	s.start()
@@ -32,6 +36,9 @@ func NewSensorService(group *gin.RouterGroup, mongoClient *mongo.Client) *Sensor
 
 func (s *SensorService) start() {
 	group := s.router.Group(s.path)
+
+	// auth middleware
+	group.Use(s.service.AuthMiddleware())
 
 	// Get all sensors
 	group.GET("", s.getAllSensors)
@@ -62,6 +69,20 @@ func (s *SensorService) getAllSensors(c *gin.Context) {
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to get sensors"})
 		return
+	}
+
+	// if measurements are requested, calculate the stats
+	if measurements {
+		for i := range sensor {
+			stats, err := s.measurementRepository.StatsBySensorID(sensor[i].ID.Hex())
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Failed to get sensor stats"})
+				return
+			}
+			sensor[i].Average = stats.Average
+			sensor[i].Min = stats.Min
+			sensor[i].Max = stats.Max
+		}
 	}
 
 	// return the sensors
@@ -95,6 +116,8 @@ func (s *SensorService) getSensorByID(c *gin.Context) {
 func (s *SensorService) createSensor(c *gin.Context) {
 	// create a new sensor
 	sensor := models.Sensor{}
+	// print the request body for debugging
+	fmt.Printf("Request body: %v\n", c.Request.Body)
 	if err := c.BindJSON(&sensor); err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("Invalid request body: %v", err)})
 		return

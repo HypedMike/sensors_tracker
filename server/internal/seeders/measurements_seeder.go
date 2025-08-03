@@ -34,18 +34,25 @@ func (s *Seeder) measurementsSeeder() error {
 	// create measurements for each sensor
 	var measurements []models.Measurement
 	for _, sensor := range sensors {
+
 		for i := 0; i < numMeasurements; i++ {
-			// Pick a random time between 30 days ago and now
-			start := time.Now().Add(-30 * 24 * time.Hour)
+			// Pick a random time between 3 days ago and now
+			start := time.Now().Add(-3 * 24 * time.Hour)
 			end := time.Now()
 			delta := end.Unix() - start.Unix()
 			randomSec := rand.Int63n(delta + 1) // +1 to include 'end' as a possible value
 			randomTimestamp := start.Add(time.Duration(randomSec) * time.Second)
 
+			// probability to go over the threshold
+			value := sensor.Threshold - (sensor.Threshold * rand.Float64() * 0.5) // 50% below threshold
+			if rand.Float64() > 0.9 {
+				value = sensor.Threshold + sensor.Threshold*0.1
+			}
+
 			// Create a measurement
 			measurement := models.Measurement{
 				SensorID:  sensor.ID,
-				Value:     rand.Float64() * sensor.Threshold,
+				Value:     value,
 				Timestamp: randomTimestamp,
 				Metric:    "dispmm", // assuming dispmm is the metric for all measurements
 			}

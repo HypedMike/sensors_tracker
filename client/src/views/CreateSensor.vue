@@ -1,48 +1,28 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import Sensor from '../models/sensor';
+import sensorsApi from '../api/sensors';
 
 let sensor = ref<Sensor>(new Sensor({}));
-let address = ref<{
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-}>({
-    street: '',
-    city: '',
-    state: '',
-    zip: ''
-});
-
-const types = [
-    { value: 'temperature', label: 'Temperature' },
-    { value: 'humidity', label: 'Humidity' },
-    { value: 'pressure', label: 'Pressure' }
-];
 
 function createSensor() {
-    // Here you would typically send the sensor data to your API
-    console.log('Creating sensor:', sensor.value, address.value);
-    // Reset form after submission
-    sensor.value = new Sensor({});
-    address.value = { street: '', city: '', state: '', zip: '' };
+    sensorsApi.createSensor(sensor.value).then(() => {
+        // Handle successful creation, e.g., redirect or show a success message
+        alert('Sensor created successfully!');
+    }).catch(error => {
+        // Handle error, e.g., show an error message
+        console.error('Error creating sensor:', error);
+        alert('Failed to create sensor. Please try again.');
+    });
 }
 
 
 </script>
 
 <template>
-    <div class="p-4">
+    <div class="">
         <h1 class="text-2xl font-bold mb-4">{{ $t('sensors.create.title') }}</h1>
         <form @submit.prevent="createSensor">
-            <div class="mb-4">
-                <label for="id" class="block text-sm font-medium text-gray-700">Id</label>
-                <input v-model="sensor.id" type="text" id="id" 
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
-                focus:border-indigo-500 focus:ring-indigo-500" required>
-                <span class="text-xs text-gray-500">{{ $t('sensors.create.id_left_empty') }}</span>
-            </div>
             <div class="mb-4">
                 <label for="name" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.name') }}</label>
                 <input v-model="sensor.name" type="text" id="name" 
@@ -50,28 +30,36 @@ function createSensor() {
                 focus:border-indigo-500 focus:ring-indigo-500" required>
             </div>
             <div class="mb-4">
-                <label for="type" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.type') }}</label>
-                <select v-model="sensor.type" id="type" class="mt-1 block w-full border-gray-300 p-2
-                rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                    <option v-for="type in types" :key="type.value" :value="type.value">{{ type.label }}</option>
-                </select>
+                <label for="threshold" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.threshold') }}</label>
+                <input v-model.number="sensor.threshold" type="number" id="threshold"
+                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
+                focus:border-indigo-500 focus:ring-indigo-500" required>
             </div>
             <div class="mb-4">
-                <label for="location" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.location') }}</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <input v-model="address.street" type="text" placeholder="Street"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
-                    focus:border-indigo-500 focus:ring-indigo-500 mb-2" required>
-                    <input v-model="address.city" type="text" placeholder="City"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
-                    focus:border-indigo-500 focus:ring-indigo-500 mb-2" required>
-                    <input v-model="address.state" type="text" placeholder="State"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
-                    focus:border-indigo-500 focus:ring-indigo-500" required>
-                    <input v-model="address.zip" type="number" placeholder="Zip Code"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
-                    focus:border-indigo-500 focus:ring-indigo-500" required>
-                </div>
+                <table class="w-full">
+                    <tbody>
+                        <tr class="w-full">
+                            <td class="w-1/3">
+                                <label for="latitude" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.latitude') }}</label>
+                            </td>
+                            <td class="w-full">
+                                <input v-model.number="sensor.location[0]" type="number" id="latitude" placeholder="Latitude" min="-90" max="90"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
+                                focus:border-indigo-500 focus:ring-indigo-500" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="longitude" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.longitude') }}</label>
+                            </td>
+                            <td>
+                                <input v-model.number="sensor.location[1]" type="number" id="longitude" placeholder="Longitude" min="-180" max="180"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
+                                focus:border-indigo-500 focus:ring-indigo-500" required>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <button type="submit" 
             style="background-color: var(--secondary);"

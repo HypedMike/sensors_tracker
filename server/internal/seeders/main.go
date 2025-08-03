@@ -27,5 +27,10 @@ func NewSeeder(client *mongo.Client) *Seeder {
 		panic(err)
 	}
 
+	// Run the users seeder
+	if err := s.usersSeeder(); err != nil {
+		panic(err)
+	}
+
 	return s
 }

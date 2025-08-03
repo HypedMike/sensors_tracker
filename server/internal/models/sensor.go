@@ -16,4 +16,9 @@ type Sensor struct {
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 
 	Measurements []Measurement `json:"measurements,omitempty" bson:"measurements,omitempty"`
+
+	// Stats
+	Average float64 `json:"average,omitempty" bson:"average,omitempty"`
+	Min     float64 `json:"min,omitempty" bson:"min,omitempty"`
+	Max     float64 `json:"max,omitempty" bson:"max,omitempty"`
 }

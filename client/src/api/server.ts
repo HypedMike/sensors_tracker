@@ -19,12 +19,22 @@ abstract class ApiService<T extends Model> {
     this.modelClass = modelClass;
   }
 
+  getAuthToken(): string {
+    const elem = document.cookie.split(";").find((c) => c.split("=")[0].trim() == "token");
+    if (elem) {
+      return elem.split("=")[1] ?? "";
+    }
+
+    return "";
+  }
+
   protected async fetchData(options?: { endpoint?: string; method?: string; body?: any, query?: Record<string, any> }): Promise<T[]> {
     try {
       const response = await fetch(`${this.baseUrl}/${this.path}${options?.endpoint ? '/' + options.endpoint : ''}?${new URLSearchParams(options?.query).toString()}`, {
         method: options?.method || "GET",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": this.getAuthToken()
         },
         body: JSON.stringify(options?.body),
       });

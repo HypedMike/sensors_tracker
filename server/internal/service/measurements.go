@@ -11,18 +11,20 @@ import (
 )
 
 type MeasurementService struct {
+	service               *Service
 	router                *gin.RouterGroup
 	path                  string
 	mongoClient           *mongo.Client
 	measurementRepository *repository.MeasurementRepository
 }
 
-func NewMeasurementService(group *gin.RouterGroup, mongoClient *mongo.Client) *MeasurementService {
+func NewMeasurementService(group *gin.RouterGroup, mongoClient *mongo.Client, service *Service) *MeasurementService {
 	s := MeasurementService{
 		router:                group,
 		mongoClient:           mongoClient,
 		path:                  "/measurements",
 		measurementRepository: repository.NewMeasurementRepository(mongoClient),
+		service:               service,
 	}
 	// Initialize routes or other service-specific setup here
 	s.start()
@@ -32,6 +34,9 @@ func NewMeasurementService(group *gin.RouterGroup, mongoClient *mongo.Client) *M
 
 func (s *MeasurementService) start() {
 	g := s.router.Group(s.path)
+
+	// add auth middleware
+	g.Use(s.service.AuthMiddleware())
 
 	// Get measurements by sensor ID
 	g.GET("", s.getMeasurementsBySensorID)

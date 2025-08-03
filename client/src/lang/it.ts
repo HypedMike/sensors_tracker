@@ -1,5 +1,14 @@
 const messages = {
     lang: 'Italiano',
+    dashboard: {
+        title: 'Dashboard',
+        hello: 'Ciao { name }',
+        latest_measurements: 'Ultime Misurazioni',
+        sensors: 'Sensori',
+    },
+    login: {
+        title: "Accesso"
+    },
     sensors: {
         title: 'Sensori',
         create: {
@@ -9,6 +18,9 @@ const messages = {
             location: 'Posizione',
             type: 'Tipo',
             crt_button: 'Crea Sensore',
+            threshold: 'Soglia',
+            latitude: 'Latitudine',
+            longitude: 'Longitudine',
         },
         list: {
             title: 'Lista Sensori',
@@ -16,6 +28,17 @@ const messages = {
             name: 'Nome',
             type: 'Tipo',
             location: 'Posizione',
+            accuracy: 'Accuratezza',
+            accuracy_of: 'Accuratezza di { sensor }',
+            value: 'Valore',
+            sensor_name: 'Nome Sensore',
+            timestamp: 'Data e ora',
+            no_sensors: 'Nessun sensore disponibile',
+            last_measurement: 'Ultima Misurazione',
+            min: 'Min',
+            max: 'Max',
+            average: 'Media',
+            status: 'Stato',
         },
         details: {
             title: 'Dettagli Sensore',

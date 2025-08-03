@@ -114,3 +114,51 @@ func (r *MeasurementRepository) DeleteMeasurementsBySensorID(sensorID string) er
 	_, err = r.collection.DeleteMany(r.ctx, bson.M{"sensor_id": id})
 	return err
 }
+
+func (r *MeasurementRepository) StatsBySensorID(sensorID string) (models.Sensor, error) {
+	// convert sensorID to ObjectID
+	id, err := bson.ObjectIDFromHex(sensorID)
+	if err != nil {
+		return models.Sensor{}, err
+	}
+
+	// aggregate to get stats
+	pipeline := bson.A{
+		bson.D{{Key: "$match", Value: bson.M{"sensor_id": id}}},
+		bson.D{{Key: "$group", Value: bson.M{
+			"_id":     nil,
+			"average": bson.M{"$avg": "$value"},
+			"min":     bson.M{"$min": "$value"},
+			"max":     bson.M{"$max": "$value"},
+		}}},
+	}
+
+	cursor, err := r.collection.Aggregate(r.ctx, pipeline)
+	if err != nil {
+		return models.Sensor{}, err
+	}
+	defer cursor.Close(r.ctx)
+
+	var result []struct {
+		Average float64 `bson:"average"`
+		Min     float64 `bson:"min"`
+		Max     float64 `bson:"max"`
+	}
+
+	if err := cursor.All(r.ctx, &result); err != nil {
+		return models.Sensor{}, err
+	}
+
+	if len(result) == 0 {
+		return models.Sensor{}, nil // no measurements found
+	}
+
+	stats := result[0]
+
+	return models.Sensor{
+		ID:      id,
+		Average: stats.Average,
+		Min:     stats.Min,
+		Max:     stats.Max,
+	}, nil
+}
