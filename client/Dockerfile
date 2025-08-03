@@ -4,6 +4,9 @@
 ARG NODE_VERSION=20.18.0
 FROM node:${NODE_VERSION}-slim AS base
 
+ARG LOCATION
+ENV VITE_API_BASE_URL=$API_BASE_URL
+
 LABEL fly_launch_runtime="Vite"
 
 # Vite app lives here
