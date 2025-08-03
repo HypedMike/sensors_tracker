@@ -1,14 +1,16 @@
-ARG GO_VERSION=1
-FROM golang:${GO_VERSION}-bookworm as builder
+# Build stage
+FROM golang:1.23-alpine AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 COPY go.mod go.sum ./
-RUN go mod download && go mod verify
+RUN go mod download
 COPY . .
-RUN go build -v -o /run-app .
+RUN go build -o server .
 
+# Run stage
+FROM alpine:latest
 
-FROM debian:bookworm
-
-COPY --from=builder /run-app /usr/local/bin/
-CMD ["run-app"]
+WORKDIR /app
+COPY --from=builder /app/server .
+EXPOSE 8080
+CMD ["./server"]
