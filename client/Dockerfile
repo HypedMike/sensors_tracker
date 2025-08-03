@@ -4,7 +4,7 @@
 ARG NODE_VERSION=20.18.0
 FROM node:${NODE_VERSION}-slim AS base
 
-ARG LOCATION
+ARG API_BASE_URL
 ENV VITE_API_BASE_URL=$API_BASE_URL
 
 LABEL fly_launch_runtime="Vite"
@@ -38,7 +38,7 @@ RUN npm prune --omit=dev
 
 
 # Final stage for app image
-FROM nginx
+FROM nginx:alpine
 
 # Copy built application
 COPY --from=build /app/dist /usr/share/nginx/html
