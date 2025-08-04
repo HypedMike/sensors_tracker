@@ -55,7 +55,7 @@ func (r *SensorRepository) GetAllSensors(options struct {
 								{Key: "$sortArray", Value: bson.D{
 									{Key: "input", Value: "$measurements"},
 									{Key: "sortBy", Value: bson.D{
-										{Key: "timestamp", Value: -1},
+										{Key: "timestamp", Value: 1},
 									}},
 								}},
 							},
