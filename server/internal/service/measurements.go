@@ -38,8 +38,11 @@ func (s *MeasurementService) start() {
 	// add auth middleware
 	g.Use(s.service.AuthMiddleware())
 
-	// Get measurements by sensor ID
+	// Get measurements
 	g.GET("", s.getMeasurementsBySensorID)
+
+	// Get measurements by sensor ID
+	g.GET("/:sensor_id", s.getMeasurementsBySensorID)
 
 	// Add measurements to a specific sensor
 	g.POST("/:sensor_id", s.addMeasurements)
@@ -53,7 +56,21 @@ func (s *MeasurementService) start() {
 }
 
 func (s *MeasurementService) getMeasurementsBySensorID(c *gin.Context) {
-	sensorID := c.Query("deviceId")
+	// check if sensor_id is provided as a path parameter
+	sensorId := c.Param("sensor_id")
+	if sensorId == "" {
+		sensorId = c.Query("deviceId")
+	}
+	if sensorId == "" {
+		c.JSON(400, gin.H{"error": "sensor_id or deviceId query parameter is required"})
+		return
+	}
+
+	// validate sensorId
+	if _, err := bson.ObjectIDFromHex(sensorId); err != nil {
+		c.JSON(400, gin.H{"error": "invalid sensor_id format"})
+		return
+	}
 
 	// get filters from query parameters
 	from := c.Query("from")
@@ -70,7 +87,7 @@ func (s *MeasurementService) getMeasurementsBySensorID(c *gin.Context) {
 	}
 
 	// get measurements from the repository
-	measurements, err := s.measurementRepository.GetMeasurementsBySensorID(sensorID, filter)
+	measurements, err := s.measurementRepository.GetMeasurementsBySensorID(sensorId, filter)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to get measurements"})
 		return

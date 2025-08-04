@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Sensor from '../models/sensor';
 import sensorsApi from '../api/sensors';
 import { VueSpinnerBall } from 'vue3-spinners';
@@ -9,6 +9,7 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import measurementsApi from '../api/measurements';
 import type { Measurement } from '../models/measurement';
 import { watch } from 'vue';
+import AddMeasurement from '../components/AddMeasurement.vue';
 
 let sensor = ref<Sensor | null>(null);
 let coordinates = computed<[number, number] | null>(() => {
@@ -25,7 +26,9 @@ let startDate = ref<string | null>(null);
 let endDate = ref<string | null>(null);
 let graphStartDate = computed(() => {
     if (startDate.value) {
-        return new Date(startDate.value);
+        const date = new Date(startDate.value);
+        date.setDate(date.getDate() + 1);
+        return date;
     }
     return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days ago
 });
@@ -48,6 +51,7 @@ let accuracy = computed(() => {
     return null;
 });
 const route = useRoute();
+const router = useRouter();
 
 function formatDateToInput(date: Date): string {
     return date.toISOString().split('T')[0];
@@ -162,6 +166,48 @@ watch([graphStartDate, graphEndDate], ([newStart, newEnd]) => {
     }
 });
 
+function addMeasurement(newMeasurement: Measurement) {
+    if (sensor.value) {
+        measurementsApi.addMeasurement(sensor.value.id, newMeasurement).then(measurement => {
+            measurements.value.push(measurement);
+            sensorsApi.getSensorById(sensor.value?.id!).then(response => {
+                sensor.value = response;
+                if (sensor.value) {
+                    measurementsApi.getMeasurements(sensor.value.id).then(m => {
+                        measurements.value = m;
+                        sensor.value!.measurements = measurements.value;
+                        startDate.value = measurements.value.length > 0 ? formatDateToInput(new Date(measurements.value[0].timestamp)) : null;
+                        endDate.value = measurements.value.length > 0 ? formatDateToInput(new Date(measurements.value[measurements.value.length - 1].timestamp)) : null;
+                        buildChart(measurements.value);
+                    }).catch(error => {
+                        console.error('Error fetching measurements:', error);
+                    });
+                }
+            }).catch(error => {
+                console.error('Error fetching sensor details:', error);
+            });
+            buildChart(measurements.value);
+        }).catch(error => {
+            console.error('Error adding measurement:', error);
+        });
+    }
+}
+
+function deleteSensor() {
+    if (!confirm('Are you sure you want to delete this sensor? This action cannot be undone.')) {
+        return;
+    }
+
+    if (sensor.value) {
+        sensorsApi.deleteSensor(sensor.value.id).then(() => {
+            // Redirect to the sensors list or home page after deletion
+            router.push('/sensors');
+        }).catch(error => {
+            console.error('Error deleting sensor:', error);
+        });
+    }
+}
+
 </script>
 
 <template>
@@ -173,7 +219,7 @@ watch([graphStartDate, graphEndDate], ([newStart, newEnd]) => {
         <div v-if="sensor">
             <p><strong>ID:</strong> {{ sensor.id }}</p>
             <p><strong>Name:</strong> {{ sensor.name }}</p>
-            <p><strong>Status:</strong> {{ sensor.status }}</p>
+            <p><strong>Status:</strong> {{ sensor.status() }}</p>
             <p><strong>Number of measurements:</strong> {{ sensor.measurements.length }}</p>
             <p><strong>Threshold:</strong> {{ sensor.threshold.toPrecision(5) }}</p>
             <p><strong>Accuracy:</strong> {{ accuracy ? accuracy.toFixed(2) : 'N/A' }}%</p>
@@ -187,23 +233,20 @@ watch([graphStartDate, graphEndDate], ([newStart, newEnd]) => {
             <ol-map style="min-width: 400px; height: 400px;">
                 <ol-view :center="coordinates" :zoom="5" projection="EPSG:4326" />
                 <ol-tile-layer>
-                <ol-source-osm />
+                    <ol-source-osm />
                 </ol-tile-layer>
                 <ol-vector-layer>
-                <ol-source-vector>
-                    <ol-feature>
-                    <ol-geom-point :coordinates="coordinates"></ol-geom-point>
-                    <ol-style>
-                        <ol-style-circle :radius="1">
-                        <ol-style-fill color="red"></ol-style-fill>
-                        <ol-style-stroke
-                            color="red"
-                            width="10"
-                        ></ol-style-stroke>
-                        </ol-style-circle>
-                    </ol-style>
-                    </ol-feature>
-                </ol-source-vector>
+                    <ol-source-vector>
+                        <ol-feature>
+                            <ol-geom-point :coordinates="coordinates"></ol-geom-point>
+                            <ol-style>
+                                <ol-style-circle :radius="1">
+                                    <ol-style-fill color="red"></ol-style-fill>
+                                    <ol-style-stroke color="red" width="10"></ol-style-stroke>
+                                </ol-style-circle>
+                            </ol-style>
+                        </ol-feature>
+                    </ol-source-vector>
                 </ol-vector-layer>
             </ol-map>
         </div>
@@ -215,20 +258,23 @@ watch([graphStartDate, graphEndDate], ([newStart, newEnd]) => {
 
         <div class="flex justify-center items-center h-full mt-4 shadow-md rounded-lg p-4">
             <label>From:
-                <input
-                    type="date"
-                    v-model="startDate"
-                    class="ml-2 p-1 border rounded"
+                <input type="date" v-model="startDate" class="ml-2 p-1 border rounded"
                     :min="formatDateToInput(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))"
-                    :max="endDate ? endDate : formatDateToInput(new Date())"
-                />
+                    :max="endDate ? endDate : formatDateToInput(new Date())" />
             </label>
             <label class="ml-4">To:
                 <input type="date"
-                :min="startDate ? startDate : formatDateToInput(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))"
-                :max="formatDateToInput(new Date())"
-                v-model="endDate" class="ml-2 p-1 border rounded" />
+                    :min="startDate ? startDate : formatDateToInput(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))"
+                    :max="formatDateToInput(new Date(Date.now() + 24 * 60 * 60 * 1000))" v-model="endDate" class="ml-2 p-1 border rounded" />
             </label>
+        </div>
+
+        <AddMeasurement v-if="sensor" :sensorId="sensor.id" @addMeasurement="addMeasurement" />
+
+        <div class="flex justify-center items-center h-full mt-4">
+            <button v-if="sensor" @click="deleteSensor" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                {{ $t('sensors.create.delete_button') }}
+            </button>
         </div>
     </div>
 </template>

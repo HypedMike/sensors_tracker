@@ -21,6 +21,7 @@ const messages = {
             threshold: 'Threshold',
             latitude: 'Latitude',
             longitude: 'Longitude',
+            delete_button: 'Delete Sensor',
         },
         list: {
             title: 'Sensors List',

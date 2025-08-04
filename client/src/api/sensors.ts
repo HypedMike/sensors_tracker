@@ -30,6 +30,13 @@ class SensorsApiService extends ApiService<Sensor> {
             }
         });
     }
+
+    async deleteSensor(id: string): Promise<void> {
+        await this.fetchData({
+            method: 'DELETE',
+            endpoint: id
+        });
+    }
 }
 
 const sensorsApi = new SensorsApiService();

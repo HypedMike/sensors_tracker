@@ -2,15 +2,21 @@
 import { ref } from 'vue';
 import Sensor from '../models/sensor';
 import sensorsApi from '../api/sensors';
+import { useRouter } from 'vue-router';
 
 let sensor = ref<Sensor>(new Sensor({}));
 
+const route = useRouter();
+
 function createSensor() {
     sensorsApi.createSensor(sensor.value).then(() => {
-        // Handle successful creation, e.g., redirect or show a success message
+        // Handle successful creation
         alert('Sensor created successfully!');
+        // Remove the sensor from the form
+        sensor.value = new Sensor({});
+        // Redirect to the details page
+        route.push(`/sensors/${sensor.value.id}`);
     }).catch(error => {
-        // Handle error, e.g., show an error message
         console.error('Error creating sensor:', error);
         alert('Failed to create sensor. Please try again.');
     });

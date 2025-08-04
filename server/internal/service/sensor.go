@@ -48,6 +48,9 @@ func (s *SensorService) start() {
 
 	// Create a new sensor
 	group.POST("", s.createSensor)
+
+	// Delete a sensor by ID
+	group.DELETE("/:sensor_id", s.deleteSensor)
 }
 
 func (s *SensorService) getAllSensors(c *gin.Context) {
@@ -128,4 +131,28 @@ func (s *SensorService) createSensor(c *gin.Context) {
 		return
 	}
 	c.JSON(201, gin.H{"id": result.ID, "message": "Sensor created successfully"})
+}
+
+func (s *SensorService) deleteSensor(c *gin.Context) {
+	sensorID := c.Param("sensor_id")
+
+	// validate sensor ID
+	if sensorID == "" {
+		c.JSON(400, gin.H{"error": "Sensor ID is required"})
+		return
+	}
+
+	// delete measurements associated with the sensor
+	if err := s.measurementRepository.DeleteMeasurementsBySensorID(sensorID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete measurements"})
+		return
+	}
+
+	// delete sensor from the repository
+	if err := s.sensorRepository.DeleteSensorByID(sensorID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete sensor"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Sensor deleted successfully"})
 }

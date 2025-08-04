@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"move/internal/models"
 	"time"
 
@@ -32,23 +33,43 @@ func (r *SensorRepository) GetAllSensors(options struct {
 }) ([]models.Sensor, error) {
 	var sensors []models.Sensor
 
-	// if measurements are requested, we need to include them
-	if options.Measurements {
-		cursor, err := r.collection.Aggregate(r.ctx, bson.A{
-			bson.D{
-				{Key: "$lookup",
-					Value: bson.D{
-						{Key: "from", Value: "measurements"},
-						{Key: "localField", Value: "_id"},
-						{Key: "foreignField", Value: "sensor_id"},
-						{Key: "as", Value: "measurements"},
-					},
+	// create pipeline
+	pipeline := bson.A{
+		bson.D{
+			{Key: "$lookup",
+				Value: bson.D{
+					{Key: "from", Value: "measurements"},
+					{Key: "localField", Value: "_id"},
+					{Key: "foreignField", Value: "sensor_id"},
+					{Key: "as", Value: "measurements"},
 				},
 			},
-			bson.D{
-				{Key: "$sort", Value: bson.D{{Key: *options.Sort, Value: 1}}},
+		},
+		bson.D{
+			{Key: "$addFields",
+				Value: bson.D{
+					{Key: "average_measurement", Value: bson.D{{Key: "$avg", Value: "$measurements.value"}}},
+					{Key: "measurements", Value: bson.D{
+						{Key: "$slice", Value: bson.A{
+							bson.D{
+								{Key: "$sortArray", Value: bson.D{
+									{Key: "input", Value: "$measurements"},
+									{Key: "sortBy", Value: bson.D{
+										{Key: "timestamp", Value: -1},
+									}},
+								}},
+							},
+							-1,
+						}},
+					}},
+				},
 			},
-		})
+		},
+	}
+
+	// add measurements to pipeline if requested
+	if options.Measurements {
+		cursor, err := r.collection.Aggregate(r.ctx, pipeline)
 		if err != nil {
 			return nil, err
 		}
@@ -77,6 +98,19 @@ func (r *SensorRepository) GetAllSensors(options struct {
 	}
 
 	return sensors, nil
+}
+
+func (r *SensorRepository) DeleteSensorByID(sensorID string) error {
+	id, err := bson.ObjectIDFromHex(sensorID)
+	if err != nil {
+		return fmt.Errorf("invalid sensor ID: %v", err)
+	}
+
+	res, err := r.collection.DeleteOne(r.ctx, bson.M{"_id": id})
+
+	fmt.Printf("Deleted %v sensor(s) with ID %s\n", res.DeletedCount, sensorID)
+
+	return err
 }
 
 func sortMeasurementsByTimestamp(measurements []models.Measurement) []models.Measurement {
@@ -117,12 +151,6 @@ func (r *SensorRepository) UpdateSensor(sensor models.Sensor) error {
 	}
 
 	_, err := r.collection.UpdateOne(r.ctx, filter, update)
-	return err
-}
-
-func (r *SensorRepository) DeleteSensor(id bson.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.collection.DeleteOne(r.ctx, filter)
 	return err
 }
 

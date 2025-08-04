@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"move/internal/seeders"
 	"move/internal/service"
 	"os"
 
@@ -40,6 +42,13 @@ func main() {
 
 	// Initialize services
 	_ = service.NewService(api, client)
+
+	// check if the user asked to seed the database
+	if len(os.Args) > 1 && os.Args[1] == "seed" {
+		fmt.Printf("Seeding the database...\n")
+		seeders.NewSeeder(client)
+		fmt.Printf("Database seeded successfully.\n")
+	}
 
 	router.Run() // listen and serve on 0.0.0.0:8080
 }

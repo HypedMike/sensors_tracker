@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo_move
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  go-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-server
+    command: ./server seed
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - DATABASE_NAME=move
+      - JWT_SECRET=your_jwt_secret
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+
+volumes:
+  mongo-data:

@@ -2,8 +2,7 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 import HomeView from './views/HomeView.vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import SensorsListView from './views/SensorsListView.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import CreateSensor from './views/CreateSensor.vue'
 import { createI18n } from 'vue-i18n'
 import * as IT from './lang/it'
@@ -14,6 +13,7 @@ import "vue3-openlayers/styles.css";
 import OpenLayersMap from "vue3-openlayers";
 import LoginView from './views/LoginView.vue'
 import { createPinia } from 'pinia'
+import SensorsTabView from './views/SensorsTabView.vue'
 
 
 
@@ -24,7 +24,7 @@ const routes = [
     },
     {
         path: '/sensors',
-        component: SensorsListView,
+        component: SensorsTabView,
     },
     {
         path: '/sensors/new',
@@ -56,7 +56,7 @@ const i18n = createI18n({
 });
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes
 });
 
