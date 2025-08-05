@@ -37,7 +37,7 @@ function createSensor() {
             </div>
             <div class="mb-4">
                 <label for="threshold" class="block text-sm font-medium text-gray-700">{{ $t('sensors.create.threshold') }}</label>
-                <input v-model.number="sensor.threshold" type="number" id="threshold"
+                <input v-model.number="sensor.threshold" type="number" step="any" id="threshold"
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2
                 focus:border-indigo-500 focus:ring-indigo-500" required>
             </div>
