@@ -48,3 +48,15 @@
 - Ho implementato un seeder per popolare il database con dati di esempio all'avvio del server.
 - Non ho avuto tempo per implementare delle animazioni per rendere il front più fluido, ho però iniziato un'implementazione responsive per mobile.
 - per facilità le statistiche sono all'endpoint `/api/stats`
+
+## Timesheet: 13h 30m
+- Autenticazione: **30m**
+- Endpoint Backend: **4h**
+- Frontend: **4h**
+  - Layout: 1h
+  - Grafici: 1h
+  - Modelli, API e gestione stato: 2h
+- Docker, docker compose e seeder: **2h**
+- Bug fix e miglioramenti: **1h**
+- Documentazione: **1h**
+- Deploy su fly.io: **1h**
