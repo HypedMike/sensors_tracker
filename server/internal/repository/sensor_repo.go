@@ -33,8 +33,20 @@ func (r *SensorRepository) GetAllSensors(options struct {
 }) ([]models.Sensor, error) {
 	var sensors []models.Sensor
 
-	// create pipeline
-	pipeline := bson.A{
+	var pipeline bson.A
+	var sort bson.D
+	if options.Sort != nil {
+		switch *options.Sort {
+		case "created_at":
+			sort = append(sort, bson.E{Key: "created_at", Value: 1})
+		case "name":
+			sort = append(sort, bson.E{Key: "name", Value: 1})
+		}
+
+		pipeline = append(pipeline, bson.D{{Key: "$sort", Value: sort}})
+	}
+
+	pipeline = append(pipeline,
 		bson.D{
 			{Key: "$lookup",
 				Value: bson.D{
@@ -65,7 +77,7 @@ func (r *SensorRepository) GetAllSensors(options struct {
 				},
 			},
 		},
-	}
+	)
 
 	// add measurements to pipeline if requested
 	if options.Measurements {

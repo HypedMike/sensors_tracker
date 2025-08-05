@@ -27,15 +27,24 @@
 ### Eseguire il progetto
 - back:
   - `cd server`
-  - diversi modi per runnare il server:
-    - per runnarlo con seeder `go run . seed` altrimenti `go run .`
-    - per runnarlo con Docker `docker compose up` (questo avvierà il seeder di default)
+  - diversi modi per lanciare il server:
+    - per lanciarlo con seeder `go run . seed` altrimenti `go run .`
+    - per lanciarlo con Docker `docker compose up` (questo avvierà il seeder di default)
   - per rilanciare il seeder manualmente basta avviare il client e lanciare il comando `npm run seed` (assicurati che il server sia in esecuzione sull'url http://localhost:8080)
 - front:
     - `cd client`
     - `npm install`
-    - per runnarlo in modo sviluppo `npm run dev` altrimenti `npm run build` e poi `npm run preview`
+    - per lanciarlo in modo sviluppo `npm run dev` altrimenti `npm run build` e poi `npm run preview`
 
 #### Per accedere:
 - username: `admin`
 - password: `admin`
+
+## Considerazioni
+- Il progetto è stato sviluppato in Vue 3 con Vite e Typescript, utilizzando Pinia per la gestione dello stato dell'utente loggato e TailwindCSS per lo stile.
+- Il server è stato sviluppato in Go utilizzando il framework Gin e MongoDB come database. Ho utilizzato la libreria standard di Mongo per la connessione e le operazioni CRUD.
+- Ho utilizzato JWT che durano 1 giorno per l'autenticazione degli utenti senza refresh token.
+- Il progetto è containerizzato con Docker, con un file `docker-compose.yaml` che definisce i servizi per il server e MongoDB.
+- Ho implementato un seeder per popolare il database con dati di esempio all'avvio del server.
+- Non ho avuto tempo per implementare delle animazioni per rendere il front più fluido, ho però iniziato un'implementazione responsive per mobile.
+- per facilità le statistiche sono all'endpoint `/api/stats`

@@ -70,7 +70,7 @@ func (s *SensorService) getAllSensors(c *gin.Context) {
 		Sort:         &sort,
 	})
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to get sensors"})
+		c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to get sensors: %v", err)})
 		return
 	}
 

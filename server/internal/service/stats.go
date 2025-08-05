@@ -21,7 +21,7 @@ func NewStatsService(group *gin.RouterGroup, mongoClient *mongo.Client, service 
 	s := StatsService{
 		router:                group,
 		mongoClient:           mongoClient,
-		path:                  "/devices",
+		path:                  "",
 		sensorRepository:      repository.NewSensorRepository(mongoClient),
 		measurementRepository: repository.NewMeasurementRepository(mongoClient),
 		service:               service,
@@ -56,18 +56,16 @@ func (s *StatsService) getSensorStats(c *gin.Context) {
 	}
 
 	// sensor id to bson.ObjectId
-	sensorObjectID, err := bson.ObjectIDFromHex(sensorID)
+	_, err := bson.ObjectIDFromHex(sensorID)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Invalid deviceId format"})
 		return
 	}
 
 	// get stats for the sensor
-	stats, err := s.sensorRepository.GetSensorByID(sensorObjectID, struct{ Measurements bool }{
-		Measurements: true,
-	})
+	stats, err := s.measurementRepository.StatsBySensorID(sensorID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to get sensor stats"})
+		c.JSON(500, gin.H{"error": "Failed to get stats"})
 		return
 	}
 

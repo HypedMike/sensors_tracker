@@ -16,6 +16,7 @@ type Service struct {
 	seederService      *SeederService
 	measurementService *MeasurementService
 	authService        *AuthService
+	statsService       *StatsService
 }
 
 func NewService(router *gin.RouterGroup, mongoClient *mongo.Client) *Service {
@@ -29,6 +30,7 @@ func NewService(router *gin.RouterGroup, mongoClient *mongo.Client) *Service {
 	s.sensorService = NewSensorService(router, mongoClient, s)
 	s.measurementService = NewMeasurementService(router, mongoClient, s)
 	s.authService = NewAuthService(router, mongoClient, s)
+	s.statsService = NewStatsService(router, mongoClient, s)
 
 	return s
 }
