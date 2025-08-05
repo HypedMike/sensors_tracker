@@ -119,12 +119,18 @@ func (s *SensorService) getSensorByID(c *gin.Context) {
 func (s *SensorService) createSensor(c *gin.Context) {
 	// create a new sensor
 	sensor := models.Sensor{}
-	// print the request body for debugging
-	fmt.Printf("Request body: %v\n", c.Request.Body)
+
 	if err := c.BindJSON(&sensor); err != nil {
 		c.JSON(400, gin.H{"error": fmt.Sprintf("Invalid request body: %v", err)})
 		return
 	}
+
+	// validate sensor data
+	if sensor.Name == "" {
+		c.JSON(400, gin.H{"error": "Sensor name is required"})
+		return
+	}
+
 	result, err := s.sensorRepository.CreateSensor(sensor)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to create sensor"})
@@ -137,13 +143,14 @@ func (s *SensorService) deleteSensor(c *gin.Context) {
 	sensorID := c.Param("sensor_id")
 
 	// validate sensor ID
-	if sensorID == "" {
-		c.JSON(400, gin.H{"error": "Sensor ID is required"})
+	id, err := bson.ObjectIDFromHex(sensorID)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid sensor ID"})
 		return
 	}
 
 	// delete measurements associated with the sensor
-	if err := s.measurementRepository.DeleteMeasurementsBySensorID(sensorID); err != nil {
+	if err := s.measurementRepository.DeleteMeasurementsBySensorID(id.Hex()); err != nil {
 		c.JSON(500, gin.H{"error": "Failed to delete measurements"})
 		return
 	}

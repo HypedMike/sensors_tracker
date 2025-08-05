@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"move/internal/models"
 	"move/internal/repository"
 	"time"
@@ -122,12 +123,20 @@ func (s *MeasurementService) addMeasurementsToMultipleSensors(c *gin.Context) {
 		return
 	}
 
+	// validate each sensor ID and value
+	for _, raw := range measurementsRaw {
+		if _, err := bson.ObjectIDFromHex(raw.SensorID); err != nil {
+			c.JSON(400, gin.H{"error": "Invalid sensor ID format"})
+			return
+		}
+	}
+
 	// convert raw measurements to models.Measurement
 	var measurements []models.Measurement
 	for _, raw := range measurementsRaw {
 		id, err := bson.ObjectIDFromHex(raw.SensorID)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid sensor ID"})
+			c.JSON(400, gin.H{"error": fmt.Sprintf("Invalid sensor ID: %v", raw.SensorID)})
 			return
 		}
 		measurements = append(measurements, models.Measurement{
@@ -147,6 +156,12 @@ func (s *MeasurementService) addMeasurementsToMultipleSensors(c *gin.Context) {
 // Delete measurements by sensor ID
 func (s *MeasurementService) deleteMeasurementsBySensorID(c *gin.Context) {
 	sensorID := c.Param("sensor_id")
+
+	// validate sensorID
+	if _, err := bson.ObjectIDFromHex(sensorID); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid sensor ID format"})
+		return
+	}
 
 	// delete measurements from the repository
 	if err := s.measurementRepository.DeleteMeasurementsBySensorID(sensorID); err != nil {
