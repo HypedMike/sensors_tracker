@@ -26,12 +26,11 @@
 
 ### Eseguire il progetto
 - back:
-  - senza docker
-    - `cd server`
-    - per runnarlo con seeder `go run . seed` altriwise `go run .`
-    - per runnarlo con Docker `docker compose up`
-  - con docker
-    - `docker compose up --build`
+  - `cd server`
+  - diversi modi per runnare il server:
+    - per runnarlo con seeder `go run . seed` altrimenti `go run .`
+    - per runnarlo con Docker `docker compose up` (questo avvierà il seeder di default)
+  - per rilanciare il seeder manualmente basta avviare il client e lanciare il comando `npm run seed` (assicurati che il server sia in esecuzione sull'url http://localhost:8080)
 - front:
     - `cd client`
     - `npm install`
