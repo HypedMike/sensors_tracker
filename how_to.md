@@ -49,9 +49,9 @@
 - Non ho avuto tempo per implementare delle animazioni per rendere il front più fluido, ho però iniziato un'implementazione responsive per mobile.
 - per facilità le statistiche sono all'endpoint `/api/stats`
 
-## Timesheet: 13h 30m
+## Timesheet: 15h 30m
 - Autenticazione: **30m**
-- Endpoint Backend: **4h**
+- Endpoint Backend: **6h**
 - Frontend: **4h**
   - Layout: 1h
   - Grafici: 1h
