@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "curl http://localhost:8080/api/seeders -X GET"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.13.4",
