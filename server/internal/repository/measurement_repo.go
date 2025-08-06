@@ -123,8 +123,16 @@ func (r *MeasurementRepository) StatsBySensorID(sensorID string) (models.Sensor,
 	}
 
 	// aggregate to get stats
+	now := time.Now()
+	threeDaysAgo := now.AddDate(0, 0, -3)
 	pipeline := bson.A{
-		bson.D{{Key: "$match", Value: bson.M{"sensor_id": id}}},
+		bson.D{{Key: "$match", Value: bson.M{
+			"sensor_id": id,
+			"timestamp": bson.M{
+				"$gte": threeDaysAgo,
+				"$lte": now,
+			},
+		}}},
 		bson.D{{Key: "$group", Value: bson.M{
 			"_id":     nil,
 			"average": bson.M{"$avg": "$value"},
